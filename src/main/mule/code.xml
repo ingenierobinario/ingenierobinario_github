@@ -18,7 +18,16 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
                 <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform>
+        <ee:transform doc:name="Transform Message" doc:id="fd0f2873-fd62-4a8b-9185-bd981c542850" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform>
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
