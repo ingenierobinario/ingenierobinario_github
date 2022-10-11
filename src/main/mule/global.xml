@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+<http:listener-config name="american-flights-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="american-flights-api-config" api="resource::72d4a31e-e720-45a2-b38f-3495f2daf735:ingeniero-binario-training:1.0.1:raml:zip:american-flights-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" >
+		<apikit:flow-mappings >
+			<apikit:flow-mapping resource="/flights" action="get" flow-ref="get:\flights:american-flights-api-config" />
+			<apikit:flow-mapping resource="/flights" action="post" content-type="application/json" flow-ref="post:\flights:application\json:american-flights-api-config" />
+			<apikit:flow-mapping resource="/flights/{ID}" action="get" flow-ref="get:\flights\(ID):american-flights-api-config" />
+			<apikit:flow-mapping resource="/flights/{ID}" action="delete" flow-ref="delete:\flights\(ID):american-flights-api-config" />
+		</apikit:flow-mappings>
+	</apikit:config>
+	
+		<db:config name="Database_Config" doc:name="Database Config" doc:id="5ebc4aa2-b5f4-4e01-b833-02a883f5c898" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}"/>
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="e3844dd0-2a4c-4282-94e0-be220acd5e1d" file="${env}-config.yaml" />
+	<global-property doc:name="Global Property" doc:id="6760be9e-39b7-4e1c-8fce-ba19f5a245a5" name="env" value="sandbox" />
+
+
+</mule>

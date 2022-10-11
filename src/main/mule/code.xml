@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="22cc4e3c-da49-4374-8546-0263cc763287" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<flow name="delete:\flights\(ID):american-flights-api-config">
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "Flight deleted (but not really)"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\flights:american-flights-api-config">
+		<ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    ID: 1,
+    code: "ER38sd",
+    price: 400,
+    departureDate: "2017/07/26",
+    origin: "CLE",
+    destination: "SFO",
+    emptySeats: 0,
+    plane: {
+      "type": "Boeing 737",
+      totalSeats: 150
+    }
+  }, 
+  {
+    ID: 2,
+    code: "ER45if",
+    price: 540.99,
+    departureDate: "2017/07/27",
+    origin: "SFO",
+    destination: "ORD",
+    emptySeats: 54,
+    plane: {
+      "type": "Boeing 777",
+      totalSeats: 300
+    }
+  }
+]]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\flights\(ID):american-flights-api-config">
+        <ee:transform>
+            <ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	flightId: attributes.uriParams.'ID'
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+                <ee:set-variable variableName="ID"><![CDATA[attributes.uriParams.'ID']]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger antes select" doc:id="75d907e4-4ce2-437f-8ba9-b3fbc9c34784" message="#[payload]"/>
+		<db:select doc:name="Select Flight por ID" doc:id="a9a4c21c-b8f1-454f-99af-8aa40bfbd8f0" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT *
+FROM american
+WHERE ID = :flightId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	flightId: vars.ID
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Logger despues select" doc:id="b712a843-ef44-412a-a29d-af563b2970a1" message="#[payload]" />
+		<ee:transform doc:name="JAVA to JSON" doc:id="fda96982-3dd2-4847-9eaa-5b908f933e66" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Select result" doc:id="a63f5985-7808-4ca3-98a1-4b604ed7acc1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	ID: payload.ID,
+	IDvar: vars.ID,
+	origin: payload.fromAirport default "",
+	destination: payload.toAirport default "",
+	price: payload.price default 0,
+}
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="ID"><![CDATA[attributes.uriParams.'ID']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request method="GET" doc:name="Solicitar saludo" doc:id="34690ee1-e21b-4e42-a639-87ea19fff10f" config-ref="HTTP_Request_configuration" path="/api/externa"/>
+		<set-variable value="299" doc:name="Codigo respuesta" doc:id="9e703c6b-68a0-4310-ac54-262402522189" variableName="respuesta"/>
+    
+</flow>
+    <flow name="post:\flights:application\json:american-flights-api-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "Flight added (but not really)"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+	<flow name="API_Externa" doc:id="9b699502-f0e7-4566-89c0-16537dc99f3f" >
+		<http:listener doc:name="Listener" doc:id="d6f9d91b-61cc-4a08-bc3f-5818c4e882c9" config-ref="american-flights-api-httpListenerConfig" path="/api/externa"/>
+		<set-payload value='#["Hola"]' doc:name="Set Payload" doc:id="67cc8778-cf61-4d5b-af5e-f65de1549a8b" />
+	</flow>
+
+
+
+
+
+</mule>
